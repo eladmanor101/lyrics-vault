@@ -14,7 +14,7 @@ use iced::{
 };
 
 use crate::screens::{
-    lyrics
+    lyrics, themes
 };
 
 fn main() -> iced::Result {
@@ -29,24 +29,39 @@ fn main() -> iced::Result {
         .run()
 }
 
-#[derive(Default)]
 struct App {
     screen: Screen,
+    theme: iced::Theme,
 
     sidebar: sidebar::Sidebar,
-    lyrics_screen: lyrics::LyricsScreen
+    lyrics_screen: lyrics::LyricsScreen,
+    themes_screen: themes::ThemesScreen
+}
+
+impl Default for App {
+    fn default() -> Self {
+        Self {
+            screen: Default::default(),
+            theme: iced::Theme::Dark,
+            sidebar: Default::default(),
+            lyrics_screen: Default::default(),
+            themes_screen: Default::default()
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
 enum Message {
     SidebarMessage(sidebar::Message),
-    LyricsMessage(lyrics::Message)
+    LyricsMessage(lyrics::Message),
+    ThemesMessage(themes::Message)
 }
 
 #[derive(Debug, Default, Clone, Copy, PartialEq)]
 enum Screen {
     #[default]
-    Lyrics
+    Lyrics,
+    Themes
 }
 
 impl App {
@@ -62,22 +77,31 @@ impl App {
                 iced::Task::none()
             },
             Message::LyricsMessage(message) => self.lyrics_screen.update(message).map(Message::LyricsMessage),
+            Message::ThemesMessage(message) => {
+                match self.themes_screen.update(message) {
+                    themes::Action::ThemeChanged(theme) => {
+                        self.theme = theme;
+                    },
+                }
+                iced::Task::none()
+            }
         }
     }
 
     fn view(&self) -> iced::Element<'_, Message> {
         let screen_view = match self.screen {
-            Screen::Lyrics => self.lyrics_screen.view().map(Message::LyricsMessage)
+            Screen::Lyrics => self.lyrics_screen.view(self.theme()).map(Message::LyricsMessage),
+            Screen::Themes => self.themes_screen.view(self.theme()).map(Message::ThemesMessage),
         };
 
         row![
-            self.sidebar.view().map(Message::SidebarMessage),
+            self.sidebar.view(self.theme()).map(Message::SidebarMessage),
             screen_view
         ].into()
     }
 
     fn theme(&self) -> iced::Theme {
-        iced::Theme::TokyoNight
+        self.theme.clone()
     }
 
     fn subscription(&self) -> iced::Subscription<Message> {

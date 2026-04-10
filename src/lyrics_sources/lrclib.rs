@@ -28,11 +28,13 @@ impl LyricsSource for LrcLibLyricsSource {
             .json::<LrcResponse>()
             .await?;
 
+        let duration = Duration::from_secs_f64(lyrics_data.duration);
+
         if let Some(raw_lyrics) = lyrics_data.synced_lyrics {
-            Ok(self.process_lyrics(&raw_lyrics, track, true))
+            Ok(self.process_lyrics(&raw_lyrics, track, duration, true))
         } else if let Some(raw_lyrics) = lyrics_data.plain_lyrics {
             tracing::warn!("synced lyrics not found for track {}, fetching plain lyrics instead", track);
-            Ok(self.process_lyrics(&raw_lyrics, track, false))
+            Ok(self.process_lyrics(&raw_lyrics, track, duration, false))
         } else {
             Err(LyricsError::NotFound(track))
         }
@@ -46,7 +48,7 @@ impl LrcLibLyricsSource {
         }
     }
 
-    fn process_lyrics(&self, raw: &str, track: Track, is_sync: bool) -> Lyrics {
+    fn process_lyrics(&self, raw: &str, track: Track, duration: Duration, is_sync: bool) -> Lyrics {
         let metadata_re = get_metadata_re();
 
         if is_sync {
@@ -79,6 +81,7 @@ impl LrcLibLyricsSource {
 
             Lyrics {
                 track,
+                duration,
                 lines: lines.into_boxed_slice(),
                 timestamps: Some(timestamps.into_boxed_slice()),
             }
@@ -92,7 +95,12 @@ impl LrcLibLyricsSource {
                 .collect::<Vec<_>>()
                 .into_boxed_slice();
 
-            Lyrics { track, lines, timestamps: None }
+            Lyrics {
+                track,
+                duration,
+                lines,
+                timestamps: None
+            }
         }
     }
 }
