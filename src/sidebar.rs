@@ -1,6 +1,6 @@
 #[allow(unused_imports)]
 use iced::{
-    Border, Element, Font, Length::{self, *}, font, widget::{button, column, container, row, space::Space, text}
+    Length::{self, *}, font, widget::{button, column, container, row, space::Space, text}
 };
 use iced_anim::{AnimationBuilder, Easing};
 
@@ -35,7 +35,7 @@ pub enum Action {
 }
 
 impl Sidebar {
-    pub fn view(&self, theme: iced::Theme) -> Element<'_, Message> {
+    pub fn view(&self, theme: iced::Theme) -> iced::Element<'_, Message> {
         AnimationBuilder::new(self.width, move |width| {
             self.sidebar_content(width, &theme)
         })
@@ -58,13 +58,13 @@ impl Sidebar {
         }
     }
 
-    fn sidebar_content(&self, width: f32, theme: &iced::Theme) -> Element<'_, Message> {
+    fn sidebar_content(&self, width: f32, theme: &iced::Theme) -> iced::Element<'_, Message> {
         let collapse_text = text(match self.collapsed {
             true => ">",
             false => "<"
         })
         .center()
-        .font(Font {
+        .font(iced::Font {
             family: font::Family::SansSerif,
             weight: font::Weight::ExtraBold,
             stretch: font::Stretch::default(),
@@ -84,7 +84,7 @@ impl Sidebar {
                 };
                 button::Style {
                     background: Some(iced::Background::Color(color)),
-                    border: Border {
+                    border: iced::Border {
                         radius: 16.0.into(),
                         ..Default::default()
                     },
@@ -121,7 +121,7 @@ impl Sidebar {
         .into()
     }
 
-    fn nav_button(&self, label: &'static str, screen: Screen, theme: &iced::Theme, alpha: f32) -> Element<'_, Message> {
+    fn nav_button(&self, label: &'static str, screen: Screen, theme: &iced::Theme, alpha: f32) -> iced::Element<'_, Message> {
         let palette = theme.extended_palette();
 
         container(
@@ -144,7 +144,7 @@ impl Sidebar {
                 };
                 button::Style {
                     background: Some(iced::Background::Color(iced::Color { a: color.a * alpha, ..color })),
-                    border: Border { radius: 6.0.into(), ..Default::default() },
+                    border: iced::Border { radius: 6.0.into(), ..Default::default() },
                     text_color: iced::Color { a: alpha, ..palette.background.base.text },
                     ..Default::default()
                 }

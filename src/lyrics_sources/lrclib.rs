@@ -17,14 +17,14 @@ pub struct LrcLibLyricsSource {
 #[async_trait]
 impl LyricsSource for LrcLibLyricsSource {
     async fn fetch_lyrics(&self, track: Track) -> Result<Lyrics, LyricsError> {
+        tracing::info!("fetching lyrics with url https://lrclib.net/api/get?artist_name={}&track_name={}", track.artist, track.title);
+
         let response = self.client
             .get("https://lrclib.net/api/get")
             .query(&[("artist_name", &*track.artist), ("track_name", &*track.title)])
             .send()
             .await?
             .error_for_status()?;
-
-        tracing::info!("fetching lyrics with url https://lrclib.net/api/get?artist_name={}&track_name={}", track.artist, track.title);
 
         let lyrics_data = response
             .json::<LrcResponse>()
@@ -126,5 +126,5 @@ fn get_metadata_re() -> &'static Regex {
 }
 
 fn get_timestamp_re() -> &'static Regex {
-    TIMESTAMP_RE.get_or_init(|| Regex::new(r"^\[(?<min>\d{2}):(?<sec>\d{2})\.(?<ms>\d{2})\]").unwrap())
+    TIMESTAMP_RE.get_or_init(|| Regex::new(r"^\[(?<min>\d{2}):(?<sec>\d{2})\.(?<ms>\d{2,3})\]").unwrap())
 }

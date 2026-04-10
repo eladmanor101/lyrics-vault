@@ -99,7 +99,7 @@ impl LyricsScreen {
         Task::perform(
             async {
                 let source = LrcLibLyricsSource::new();
-                source.fetch_lyrics(track).await
+                source.lyrics(track).await
             },
             |result| match result {
                 Ok(lyrics) => Message::LyricsFetched(lyrics),

@@ -72,8 +72,7 @@ impl App {
     fn update(&mut self, message: Message) -> iced::Task<Message> {
         match message {
             Message::Tick(instant) => {
-                self.lyrics_screen.update(lyrics::Message::Tick(instant));
-                iced::Task::none()
+                self.lyrics_screen.update(lyrics::Message::Tick(instant)).map(Message::LyricsMessage)
             }
             Message::SidebarMessage(message) => {
                 match self.sidebar.update(message) {    
