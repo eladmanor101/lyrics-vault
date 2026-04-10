@@ -24,6 +24,8 @@ impl LyricsSource for LrcLibLyricsSource {
             .await?
             .error_for_status()?;
 
+        tracing::info!("fetching lyrics with url https://lrclib.net/api/get?artist_name={}&track_name={}", track.artist, track.title);
+
         let lyrics_data = response
             .json::<LrcResponse>()
             .await?;

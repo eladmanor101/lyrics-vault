@@ -8,7 +8,7 @@ pub fn setup_tracing() -> WorkerGuard {
         .with_writer(non_blocking)
         .with_max_level(tracing::Level::DEBUG)
         .with_ansi(false)
-        .with_env_filter(tracing_subscriber::EnvFilter::new("spotify_lyrics_tui=debug"))
+        .with_env_filter(tracing_subscriber::EnvFilter::new("lyrics_vault=debug"))
         .init();
 
     guard

@@ -151,17 +151,21 @@ impl LyricsScreen {
             Some(track) => row![
                 text(track.artist.as_ref())
                     .size(16)
-                    .color(palette.primary.base.color),
+                    .color(palette.background.base.text)
+                    .font(iced::Font {
+                        weight: iced::font::Weight::Semibold,
+                        ..iced::Font::default()
+                    }),
                 text("  —  ")
                     .size(16)
-                    .color(palette.background.strong.color),
+                    .color(palette.background.weak.text),
                 text(track.title.as_ref())
                     .size(16)
                     .font(iced::Font {
                         weight: iced::font::Weight::Bold,
                         ..iced::Font::default()
                     })
-                    .color(palette.background.base.text),
+                    .color(palette.background.strong.text),
             ]
             .into(),
             None => text("No track playing")
@@ -234,7 +238,7 @@ impl LyricsScreen {
                                     weight: iced::font::Weight::Bold,
                                     ..iced::Font::default()
                                 })
-                                .color(palette.background.base.text)
+                                .color(palette.background.strongest.text)
                                 .width(Fill)
                                 .center()
                                 .wrapping(text::Wrapping::Word)
@@ -242,7 +246,7 @@ impl LyricsScreen {
                         } else {
                             text(line.as_str())
                                 .size(17)
-                                .color(palette.secondary.base.color)
+                                .color(palette.background.strong.text)
                                 .width(Fill)
                                 .center()
                                 .wrapping(text::Wrapping::Word)

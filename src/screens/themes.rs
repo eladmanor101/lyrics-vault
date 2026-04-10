@@ -36,7 +36,7 @@ impl ThemesScreen {
         let palette = theme.extended_palette();
 
         container(
-            text("Settings")
+            text("Themes")
                 .size(16)
                 .color(palette.background.base.text)
         )
@@ -82,24 +82,6 @@ impl ThemesScreen {
 
         grid.into()
     }
-
-    // fn swatch_grid(&self, swatches: Vec<Element<'_, Message>>) -> Element<'_, Message> {
-    //     let mut rows: Vec<Element<'_, Message>> = Vec::new();
-    //     let per_row = 4;
-
-    //     for chunk in swatches.chunks(per_row) {
-    //         let mut r = row(chunk.iter().map(|_| space_placeholder()).collect::<Vec<_>>())
-    //             .spacing(12);
-
-    //         rows.push(
-    //             row(chunk.to_vec())
-    //                 .spacing(12)
-    //                 .into()
-    //         );
-    //     }
-
-    //     column(rows).spacing(12).into()
-    // }
 
     fn swatch_grid<'a>(&self, swatches: Vec<Element<'a, Message>>) -> Element<'a, Message> {
         let mut swatches = swatches.into_iter().peekable();
