@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use iced::{
     Element, Length::*, Subscription, Task,
@@ -25,17 +25,21 @@ enum LyricsState {
 pub struct LyricsScreen {
     current_track: Option<Track>,
     playback_status: PlaybackStatus,
-    track_position: Duration,
     lyrics_state: LyricsState,
+
+    playback_progress: Duration,
+    playback_progress_sync: Option<(Duration, Instant)>
 }
 
 #[derive(Debug, Clone)]
 pub enum Message {
+    Tick(Instant),
+
     LyricsFetched(Lyrics),
     LyricsFetchError(String),
 
     TrackChanged(Track),
-    PositionChanged(Duration),
+    PositionChanged((Duration, Instant)),
     PlaybackStatusChanged(PlaybackStatus),
     MediaError(String)
 }
@@ -52,6 +56,13 @@ impl LyricsScreen {
 
     pub fn update(&mut self, message: Message) -> Task<Message> {
         match message {
+            Message::Tick(instant) => {
+                if let Some((last_duration, last_instant)) = self.playback_progress_sync
+                    && self.playback_status == PlaybackStatus::Playing {
+                    self.playback_progress = last_duration + (instant - last_instant);
+                }
+                Task::none()
+            }
             Message::LyricsFetched(lyrics) => {
                 self.lyrics_state = LyricsState::Loaded(lyrics);
                 Task::none()
@@ -65,8 +76,8 @@ impl LyricsScreen {
                 self.lyrics_state = LyricsState::Loading;
                 self.fetch_lyrics(track)
             }
-            Message::PositionChanged(duration) => {
-                self.track_position = duration;
+            Message::PositionChanged(sync) => {
+                self.playback_progress_sync = Some(sync);
                 Task::none()
             }
             Message::PlaybackStatusChanged(playback_status) => {
@@ -126,7 +137,7 @@ impl LyricsScreen {
                 if let Ok(position) = media.current_playback_position().await {
                     if position != last_position {
                         last_position = position;
-                        tx.send(Message::PositionChanged(position)).await.ok();
+                        tx.send(Message::PositionChanged((position, Instant::now()))).await.ok();
                     }
                 }
 
@@ -279,7 +290,7 @@ impl LyricsScreen {
     fn active_line_index(&self, timestamps: &[Duration]) -> usize {
         timestamps
             .iter()
-            .position(|t| *t > self.track_position)
+            .position(|t| *t > self.playback_progress)
             .map(|i| i.saturating_sub(1))
             .unwrap_or(timestamps.len().saturating_sub(1))
     }
@@ -288,7 +299,7 @@ impl LyricsScreen {
         let palette = theme.extended_palette();
 
         let (position, duration) = match &self.lyrics_state {
-            LyricsState::Loaded(lyrics) => (self.track_position, lyrics.duration),
+            LyricsState::Loaded(lyrics) => (self.playback_progress, lyrics.duration),
             _ => (Duration::ZERO, Duration::ZERO),
         };
 

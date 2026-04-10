@@ -5,6 +5,8 @@ mod lyrics_sources;
 mod media_sources;
 mod utils;
 
+use std::time::Duration;
+
 #[allow(unused_imports)]
 use iced::{
     widget::{button, text},
@@ -52,6 +54,8 @@ impl Default for App {
 
 #[derive(Debug, Clone)]
 enum Message {
+    Tick(std::time::Instant),
+
     SidebarMessage(sidebar::Message),
     LyricsMessage(lyrics::Message),
     ThemesMessage(themes::Message)
@@ -67,6 +71,10 @@ enum Screen {
 impl App {
     fn update(&mut self, message: Message) -> iced::Task<Message> {
         match message {
+            Message::Tick(instant) => {
+                self.lyrics_screen.update(lyrics::Message::Tick(instant));
+                iced::Task::none()
+            }
             Message::SidebarMessage(message) => {
                 match self.sidebar.update(message) {    
                     Some(action) => match action {
@@ -105,6 +113,9 @@ impl App {
     }
 
     fn subscription(&self) -> iced::Subscription<Message> {
-        self.lyrics_screen.subscription().map(Message::LyricsMessage)
+        iced::Subscription::batch([
+            iced::time::every(Duration::from_millis(50)).map(Message::Tick),
+            self.lyrics_screen.subscription().map(Message::LyricsMessage)
+        ])
     }
 }

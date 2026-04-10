@@ -9,9 +9,3 @@ pub struct Lyrics {
     pub lines: Box<[String]>,
     pub timestamps: Option<Box<[Duration]>>,
 }
-
-impl Lyrics {
-    pub fn is_synced(&self) -> bool {
-        self.timestamps.is_some()
-    }
-}
