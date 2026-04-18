@@ -3,7 +3,7 @@ use std::time::{Duration, Instant};
 use iced::{
     Element, Length::*, Subscription, Task,
     futures::{Stream, sink::SinkExt},
-    widget::{center, column, container, progress_bar, row, scrollable, space, text},
+    widget::{button, center, column, container, progress_bar, row, scrollable, space, text},
 };
 
 use crate::{
@@ -28,12 +28,16 @@ pub struct LyricsScreen {
     lyrics_state: LyricsState,
 
     playback_progress: Duration,
-    playback_progress_sync: Option<(Duration, Instant)>
+    playback_progress_sync: Option<(Duration, Instant)>,
+    playback_delay: i64,
 }
 
 #[derive(Debug, Clone)]
 pub enum Message {
     Tick(Instant),
+
+    DelayIncrement,
+    DelayDecrement,
 
     LyricsFetched(Lyrics),
     LyricsFetchError(String),
@@ -63,6 +67,14 @@ impl LyricsScreen {
                 }
                 Task::none()
             }
+            Message::DelayIncrement => {
+                self.playback_delay += 500;
+                Task::none()
+            },
+            Message::DelayDecrement => {
+                self.playback_delay -= 500;
+                Task::none()
+            },
             Message::LyricsFetched(lyrics) => {
                 self.lyrics_state = LyricsState::Loaded(lyrics);
                 Task::none()
@@ -288,9 +300,15 @@ impl LyricsScreen {
     }
 
     fn active_line_index(&self, timestamps: &[Duration]) -> usize {
+        let position = if self.playback_delay >= 0 {
+            self.playback_progress.saturating_add(Duration::from_millis(self.playback_delay as u64))
+        } else {
+            self.playback_progress.saturating_sub(Duration::from_millis(self.playback_delay.unsigned_abs()))
+        };
+
         timestamps
             .iter()
-            .position(|t| *t > self.playback_progress)
+            .position(|t| *t > position)
             .map(|i| i.saturating_sub(1))
             .unwrap_or(timestamps.len().saturating_sub(1))
     }
@@ -332,6 +350,7 @@ impl LyricsScreen {
 
         container(
             column![
+                self.delay_control(theme),
                 progress,
                 timestamps,
             ]
@@ -350,6 +369,28 @@ impl LyricsScreen {
             )),
             ..Default::default()
         })
+        .into()
+    }
+
+    fn delay_control(&self, theme: &iced::Theme) -> Element<'_, Message> {
+        let palette = theme.extended_palette();
+
+        row![
+            text("Delay:")
+                .size(12)
+                .color(palette.secondary.base.color),
+            button(text("-").size(12))
+                .on_press(Message::DelayDecrement)
+                .padding([2, 8]),
+            text(format!("{:+}ms", self.playback_delay))
+                .size(12)
+                .color(palette.background.base.text),
+            button(text("+").size(12))
+                .on_press(Message::DelayIncrement)
+                .padding([2, 8]),
+        ]
+        .align_y(iced::Alignment::Center)
+        .spacing(6)
         .into()
     }
 }
